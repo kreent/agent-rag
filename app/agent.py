@@ -158,7 +158,7 @@ def ejecutar_consulta_api(endpoint: str = "", method: str = "GET", params: dict 
         if API_KEY:
             headers["Authorization"] = f"Bearer {API_KEY}"
 
-        with httpx.Client(timeout=30) as http_client:
+        with httpx.Client(timeout=30, verify=False) as http_client:
             url = f"{API_BASE_URL}{endpoint}" if endpoint else API_BASE_URL
 
             if method == "GET":

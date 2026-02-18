@@ -88,7 +88,8 @@ def extract_text_from_file(filepath: str) -> str:
         elements = partition(
             filename=filepath,
             strategy="auto",  # Usa OCR si es necesario
-            include_page_breaks=True
+            include_page_breaks=True,
+            languages=["spa"],  # Español
         )
         
         # Unir todos los elementos
