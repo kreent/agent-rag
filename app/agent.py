@@ -123,18 +123,50 @@ def _get_openai_client():
 
 
 def ejecutar_busqueda_documentos(query: str, num_results: int = 5) -> str:
-    """Busca en el vector store y formatea resultados."""
+    """Busca en el vector store (documentos + datos de API) y formatea resultados."""
     try:
-        resultados = vector_store.buscar(query, k=num_results)
+        all_results = []
 
-        if not resultados:
-            return "No encontré información relevante en los documentos."
+        # Buscar en datos de API primero (si existen)
+        try:
+            api_results = vector_store.collection.query(
+                query_embeddings=vector_store.embedder.encode([query]).tolist(),
+                n_results=min(3, vector_store.collection.count()),
+                where={"type": "api_data"},
+                include=["documents", "metadatas", "distances"],
+            )
+            for i in range(len(api_results["ids"][0])):
+                all_results.append({
+                    "content": api_results["documents"][0][i],
+                    "source": api_results["metadatas"][0][i].get("source", "API"),
+                    "score": 1 - api_results["distances"][0][i],
+                    "origin": "api",
+                })
+        except Exception:
+            pass  # No hay datos de API o error en filtro
+
+        # Buscar en todos los documentos
+        doc_results = vector_store.buscar(query, k=num_results)
+        for doc in doc_results:
+            # Evitar duplicados de API
+            if not any(r["content"] == doc["content"] for r in all_results):
+                doc["origin"] = "doc"
+                all_results.append(doc)
+
+        if not all_results:
+            return "No encontré información relevante en la base de conocimiento."
+
+        # Ordenar por score y tomar los mejores
+        all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        top_results = all_results[:num_results]
 
         respuesta = []
-        for i, doc in enumerate(resultados, 1):
-            source = Path(doc["source"]).name if doc.get("source") else "Desconocido"
+        for i, doc in enumerate(top_results, 1):
+            source = doc.get("source", "Desconocido")
+            if source != "api_externa" and source != "API":
+                source = Path(source).name
             score = doc.get("score", 0)
-            content = doc["content"][:800]  # Limitar longitud
+            content = doc["content"][:500]
 
             respuesta.append(f"**[{i}] {source}** (relevancia: {score:.2f})\n{content}")
 
