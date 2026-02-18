@@ -29,15 +29,15 @@ vector_store = VectorStore()
 TOOLS = [
     {
         "name": "buscar_documentos",
-        "description": """Busca información en los documentos internos de la empresa.
-        Usa esta herramienta para encontrar información en PDFs, Excel, Word, y otros archivos.
-        Ejemplos: políticas, contratos, reportes, manuales, procedimientos.""",
+        "description": """Busca información en la base de conocimiento interna.
+        Incluye documentos (PDFs, Excel, Word) Y datos indexados desde APIs externas.
+        SIEMPRE usa esta herramienta primero para cualquier pregunta.""",
         "input_schema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "La pregunta o términos a buscar en los documentos",
+                    "description": "La pregunta o términos a buscar",
                 },
                 "num_results": {
                     "type": "integer",
@@ -50,20 +50,15 @@ TOOLS = [
     },
     {
         "name": "consultar_api",
-        "description": """Consulta la API del IDEAM (Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia).
-        Esta API retorna el organigrama institucional en formato JSON con información de:
-        - Grupos de trabajo y sus jefes/coordinadores
-        - Subdirecciones y sus directores
-        - Oficinas y sus responsables
-        - Dirección General y Secretaría General
-        Cada registro tiene: titulo (nombre del grupo/dependencia), nombre (persona responsable), enlace, nodo, padre.
-        Usa esta herramienta cuando pregunten sobre personas, cargos, jefes, responsables o estructura organizacional del IDEAM.""",
+        "description": """Consulta la API externa en tiempo real.
+        Usa esta herramienta SOLO si buscar_documentos no encontró la información que necesitas.
+        ADVERTENCIA: Las respuestas grandes serán truncadas.""",
         "input_schema": {
             "type": "object",
             "properties": {
                 "endpoint": {
                     "type": "string",
-                    "description": "Sub-ruta adicional a consultar. Dejar vacío para obtener todo el organigrama.",
+                    "description": "Sub-ruta de la API a consultar. Vacío para la URL base.",
                     "default": "",
                 },
                 "method": {
@@ -83,16 +78,15 @@ TOOLS = [
     },
 ]
 
-SYSTEM_PROMPT = """Eres un asistente inteligente del IDEAM (Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia).
+SYSTEM_PROMPT = """Eres un asistente inteligente que ayuda a responder preguntas usando la base de conocimiento disponible.
 
-Tienes acceso a dos fuentes de datos:
-1. Documentos internos: Archivos PDF, Excel, Word, etc. con información histórica, reportes meteorológicos, alertas, boletines, y también el organigrama institucional indexado.
-2. API del IDEAM: Consulta directa a la API para datos en tiempo real (usar solo si buscar_documentos no encuentra la información).
+Tienes acceso a dos herramientas:
+1. buscar_documentos: Busca en documentos internos Y datos indexados desde APIs externas. SIEMPRE usa esta herramienta primero.
+2. consultar_api: Consulta la API externa en tiempo real. Solo úsala si buscar_documentos no encontró información relevante.
 
 Instrucciones:
-- SIEMPRE usa primero buscar_documentos para cualquier pregunta (incluyendo sobre personas, jefes, responsables, cargos, organigrama, reportes, alertas, etc.)
-- Solo usa consultar_api si buscar_documentos no encuentra información relevante
-- Puedes usar ambas herramientas si es necesario
+- SIEMPRE usa buscar_documentos como primera opción para cualquier pregunta
+- Solo usa consultar_api como respaldo si buscar_documentos no encuentra la información
 - Siempre cita las fuentes de donde obtuviste la información
 - Si no encuentras información, dilo claramente
 - Responde en español de forma clara y concisa
