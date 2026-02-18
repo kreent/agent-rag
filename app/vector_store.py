@@ -135,8 +135,18 @@ class VectorStore:
     
     def stats(self) -> dict:
         """Retorna estadísticas del vector store."""
+        try:
+            count = self.collection.count()
+        except Exception:
+            # Si la colección se corrompió, recrearla
+            print("⚠️ Colección corrupta, recreando...")
+            self.collection = self.client.get_or_create_collection(
+                name=COLLECTION_NAME,
+                metadata={"hnsw:space": "cosine"}
+            )
+            count = self.collection.count()
         return {
-            "total_documents": self.collection.count(),
+            "total_documents": count,
             "collection_name": COLLECTION_NAME,
             "embedding_model": EMBEDDING_MODEL
         }
