@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  rag-agent:
+    build: .
+    container_name: rag-agent
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montar carpeta de documentos (solo lectura)
+      - /var/www/html/agente/sites/default/files:/files:ro
+      # Persistir base de datos vectorial
+      - rag_data:/app/data
+    environment:
+      # API de Anthropic (REQUERIDO)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # Tu API de datos
+      - API_BASE_URL=${API_BASE_URL:-https://www.ideam.gov.co/organigrama}
+      
+      # Configuración
+      - FILES_PATH=/files
+      - VECTOR_DB_PATH=/app/data/chroma_db
+      - CHUNK_SIZE=1000
+      - CHUNK_OVERLAP=200
+      
+      # Modelo de embeddings (multilingüe para español)
+      - EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      
+      # CORS (dominios permitidos, separados por coma)
+      - CORS_ORIGINS=*
+    
+    # Limitar recursos (ajustar según tu servidor)
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  rag_data:
+    driver: local
