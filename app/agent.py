@@ -50,15 +50,21 @@ TOOLS = [
     },
     {
         "name": "consultar_api",
-        "description": """Consulta la API de datos en tiempo real.
-        Usa esta herramienta para obtener datos actuales del sistema.
-        Ejemplos: clientes, productos, pedidos, inventario, métricas.""",
+        "description": """Consulta la API del IDEAM (Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia).
+        Esta API retorna el organigrama institucional en formato JSON con información de:
+        - Grupos de trabajo y sus jefes/coordinadores
+        - Subdirecciones y sus directores
+        - Oficinas y sus responsables
+        - Dirección General y Secretaría General
+        Cada registro tiene: titulo (nombre del grupo/dependencia), nombre (persona responsable), enlace, nodo, padre.
+        Usa esta herramienta cuando pregunten sobre personas, cargos, jefes, responsables o estructura organizacional del IDEAM.""",
         "input_schema": {
             "type": "object",
             "properties": {
                 "endpoint": {
                     "type": "string",
-                    "description": "El endpoint a consultar (ej: /clientes, /productos/123)",
+                    "description": "Sub-ruta adicional a consultar. Dejar vacío para obtener todo el organigrama.",
+                    "default": "",
                 },
                 "method": {
                     "type": "string",
@@ -72,20 +78,22 @@ TOOLS = [
                     "default": {},
                 },
             },
-            "required": ["endpoint"],
+            "required": [],
         },
     },
 ]
 
-SYSTEM_PROMPT = """Eres un asistente inteligente que ayuda a encontrar información.
+SYSTEM_PROMPT = """Eres un asistente inteligente del IDEAM (Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia).
 
 Tienes acceso a dos fuentes de datos:
-1. Documentos internos: Archivos PDF, Excel, Word, etc. con información histórica, políticas, reportes, etc.
-2. API de datos: Información en tiempo real del sistema (clientes, productos, métricas, etc.)
+1. Documentos internos: Archivos PDF, Excel, Word, etc. con información histórica, reportes meteorológicos, alertas, boletines, etc.
+2. API del organigrama del IDEAM: Información actualizada sobre la estructura organizacional, grupos de trabajo, jefes, subdirecciones y responsables.
 
 Instrucciones:
-- Analiza la pregunta y decide qué herramienta(s) usar
+- Cuando pregunten sobre personas, jefes, responsables o cargos del IDEAM, usa la herramienta consultar_api para obtener el organigrama
+- Cuando pregunten sobre reportes, alertas, datos históricos o documentos, usa buscar_documentos
 - Puedes usar ambas herramientas si es necesario
+- Al buscar en el organigrama, busca en los campos 'titulo' (nombre del grupo) y 'nombre' (persona responsable)
 - Siempre cita las fuentes de donde obtuviste la información
 - Si no encuentras información, dilo claramente
 - Responde en español de forma clara y concisa
@@ -143,15 +151,15 @@ def ejecutar_busqueda_documentos(query: str, num_results: int = 5) -> str:
         return f"Error buscando en documentos: {str(e)}"
 
 
-def ejecutar_consulta_api(endpoint: str, method: str = "GET", params: dict = None) -> str:
-    """Ejecuta consulta a la API externa."""
+def ejecutar_consulta_api(endpoint: str = "", method: str = "GET", params: dict = None) -> str:
+    """Ejecuta consulta a la API del IDEAM."""
     try:
         headers = {}
         if API_KEY:
             headers["Authorization"] = f"Bearer {API_KEY}"
 
         with httpx.Client(timeout=30) as http_client:
-            url = f"{API_BASE_URL}{endpoint}"
+            url = f"{API_BASE_URL}{endpoint}" if endpoint else API_BASE_URL
 
             if method == "GET":
                 response = http_client.get(url, params=params or {}, headers=headers)
