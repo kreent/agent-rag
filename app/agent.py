@@ -168,10 +168,23 @@ def ejecutar_consulta_api(endpoint: str = "", method: str = "GET", params: dict 
             response.raise_for_status()
             text = response.text
 
-            # Truncar respuestas muy grandes para no exceder el contexto del LLM
-            MAX_RESPONSE = 8000
+            # Si la respuesta es muy grande, es probable que sea el organigrama completo.
+            # En ese caso, redirigir a buscar_documentos ya que está indexado.
+            MAX_RESPONSE = 3000
             if len(text) > MAX_RESPONSE:
-                text = text[:MAX_RESPONSE] + "\n\n... [respuesta truncada, usa buscar_documentos para búsquedas más específicas]"
+                try:
+                    import json
+                    data = json.loads(text)
+                    if isinstance(data, list) and len(data) > 10:
+                        return (
+                            f"La API retornó {len(data)} registros. "
+                            "Esta información ya está indexada en los documentos internos. "
+                            "Usa la herramienta buscar_documentos con los términos de búsqueda "
+                            "para encontrar la información específica que necesitas."
+                        )
+                except (json.JSONDecodeError, ValueError):
+                    pass
+                text = text[:MAX_RESPONSE] + "\n\n... [respuesta truncada]"
             return text
 
     except httpx.HTTPStatusError as e:

@@ -8,6 +8,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      # Montar código fuente (cambios se reflejan sin rebuild)
+      - ./app:/app/app
       # Montar carpeta de documentos (solo lectura)
       - /var/www/html/agente/sites/default/files:/files:ro
       # Persistir base de datos vectorial
