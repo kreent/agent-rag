@@ -86,14 +86,13 @@ TOOLS = [
 SYSTEM_PROMPT = """Eres un asistente inteligente del IDEAM (Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia).
 
 Tienes acceso a dos fuentes de datos:
-1. Documentos internos: Archivos PDF, Excel, Word, etc. con información histórica, reportes meteorológicos, alertas, boletines, etc.
-2. API del organigrama del IDEAM: Información actualizada sobre la estructura organizacional, grupos de trabajo, jefes, subdirecciones y responsables.
+1. Documentos internos: Archivos PDF, Excel, Word, etc. con información histórica, reportes meteorológicos, alertas, boletines, y también el organigrama institucional indexado.
+2. API del IDEAM: Consulta directa a la API para datos en tiempo real (usar solo si buscar_documentos no encuentra la información).
 
 Instrucciones:
-- Cuando pregunten sobre personas, jefes, responsables o cargos del IDEAM, usa la herramienta consultar_api para obtener el organigrama
-- Cuando pregunten sobre reportes, alertas, datos históricos o documentos, usa buscar_documentos
+- SIEMPRE usa primero buscar_documentos para cualquier pregunta (incluyendo sobre personas, jefes, responsables, cargos, organigrama, reportes, alertas, etc.)
+- Solo usa consultar_api si buscar_documentos no encuentra información relevante
 - Puedes usar ambas herramientas si es necesario
-- Al buscar en el organigrama, busca en los campos 'titulo' (nombre del grupo) y 'nombre' (persona responsable)
 - Siempre cita las fuentes de donde obtuviste la información
 - Si no encuentras información, dilo claramente
 - Responde en español de forma clara y concisa
@@ -167,7 +166,13 @@ def ejecutar_consulta_api(endpoint: str = "", method: str = "GET", params: dict 
                 response = http_client.post(url, json=params or {}, headers=headers)
 
             response.raise_for_status()
-            return response.text
+            text = response.text
+
+            # Truncar respuestas muy grandes para no exceder el contexto del LLM
+            MAX_RESPONSE = 8000
+            if len(text) > MAX_RESPONSE:
+                text = text[:MAX_RESPONSE] + "\n\n... [respuesta truncada, usa buscar_documentos para búsquedas más específicas]"
+            return text
 
     except httpx.HTTPStatusError as e:
         return f"Error HTTP {e.response.status_code}: {e.response.text}"
