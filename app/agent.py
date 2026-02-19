@@ -324,14 +324,16 @@ def _chat_with_openai_compatible(
 
     historial.append({"role": "user", "content": mensaje})
 
+    first_call = True
     while True:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "system", "content": SYSTEM_PROMPT}] + historial,
             tools=openai_tools,
-            tool_choice="auto",
+            tool_choice="required" if first_call else "auto",
             temperature=0,
         )
+        first_call = False
 
         msg = response.choices[0].message
         tool_calls = msg.tool_calls or []
