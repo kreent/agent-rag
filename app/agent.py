@@ -86,6 +86,7 @@ SYSTEM_PROMPT = """Eres un asistente experto que ayuda a los usuarios respondien
 
 ## CÓMO RESPONDER
 - SIEMPRE usa buscar_documentos para buscar la respuesta antes de responder
+- SIEMPRE busca con las herramientas, incluso si ya respondiste una pregunta similar antes en la conversación. NO confíes en respuestas previas del historial — siempre haz una búsqueda nueva
 - Cuando encuentres información relevante, responde con confianza citando la fuente
 - Si el usuario pregunta qué documentos o información tienes, usa buscar_documentos con un término general y describe lo que encuentras
 - Si buscar_documentos retorna resultados, ÚSALOS para construir tu respuesta — no digas que no encontraste nada si hay resultados
