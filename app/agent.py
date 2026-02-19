@@ -380,6 +380,8 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
     """
     Procesa un mensaje y retorna la respuesta + historial actualizado.
     Aplica guardrails de entrada y salida.
+    Usa arquitectura PRE-SEARCH: siempre busca en la base de conocimiento
+    antes de llamar al LLM.
 
     Args:
         mensaje: Pregunta del usuario
@@ -399,55 +401,59 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
         historial.append({"role": "assistant", "content": rejection_reason})
         return rejection_reason, historial
 
-    # ── LLM CALL ──
+    # ── PRE-SEARCH: Siempre buscar en la base de conocimiento ──
+    logger.info(f"Pre-búsqueda para: {mensaje}")
+    search_results = ejecutar_busqueda_documentos(mensaje, num_results=5)
+    has_results = search_results and "No encontré" not in search_results and "Error" not in search_results
+
+    if has_results:
+        logger.info(f"Resultados encontrados: {len(search_results)} chars")
+        # Construir prompt enriquecido con los resultados
+        enriched_prompt = SYSTEM_PROMPT + (
+            "\n\n## CONTEXTO DE LA BASE DE CONOCIMIENTO\n"
+            "Se realizó una búsqueda automática y se encontraron los siguientes resultados relevantes. "
+            "DEBES usar esta información para responder al usuario. "
+            "NO digas que no tienes información si hay resultados aquí.\n\n"
+            f"{search_results}"
+        )
+    else:
+        logger.warning(f"No se encontraron resultados para: {mensaje}")
+        enriched_prompt = SYSTEM_PROMPT
+
+    # ── LLM CALL (sin tools, usando el contexto pre-buscado) ──
+    if historial is None:
+        historial = []
+    historial.append({"role": "user", "content": mensaje})
+
     if LLM_PROVIDER == "anthropic":
-        respuesta, historial = _chat_with_anthropic(mensaje, historial)
+        import anthropic
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        response = client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=4096,
+            system=enriched_prompt,
+            messages=historial,
+        )
+        respuesta = "".join(
+            block.text for block in response.content if hasattr(block, "text")
+        )
     elif LLM_PROVIDER in {"openai", "openai_compatible", "ollama", "groq", "openrouter"}:
-        respuesta, historial = _chat_with_openai_compatible(mensaje, historial)
+        client = _get_openai_client()
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "system", "content": enriched_prompt}] + historial,
+            temperature=0,
+        )
+        respuesta = response.choices[0].message.content or ""
     else:
         raise ValueError(
             f"LLM_PROVIDER no soportado: {LLM_PROVIDER}. Usa 'anthropic' o 'openai_compatible'."
         )
 
-    # ── SAFETY NET: Si el LLM no usó herramientas, forzar búsqueda ──
-    tools_used = _extract_tools_used(historial)
-    if not tools_used:
-        logger.warning("LLM no usó herramientas. Forzando búsqueda automática...")
-        search_results = ejecutar_busqueda_documentos(mensaje, num_results=5)
-
-        # Si hay resultados relevantes, reintentar con contexto
-        if search_results and "No se encontraron" not in search_results:
-            # Remover la respuesta vacía del LLM del historial
-            if historial and historial[-1].get("role") == "assistant":
-                historial.pop()
-
-            # Inyectar resultados como contexto del sistema
-            historial.append({
-                "role": "user",
-                "content": (
-                    f"[SISTEMA] Se realizó una búsqueda automática con la consulta del usuario. "
-                    f"Estos son los resultados encontrados en la base de conocimiento:\n\n"
-                    f"{search_results}\n\n"
-                    f"Usa esta información para responder la pregunta original del usuario: {mensaje}"
-                ),
-            })
-
-            # Segundo intento con los resultados inyectados
-            if LLM_PROVIDER == "anthropic":
-                respuesta, historial = _chat_with_anthropic("", historial)
-            else:
-                client = _get_openai_client()
-                response = client.chat.completions.create(
-                    model=OPENAI_MODEL,
-                    messages=[{"role": "system", "content": SYSTEM_PROMPT}] + historial,
-                    temperature=0,
-                )
-                respuesta = response.choices[0].message.content or ""
-                historial.append({"role": "assistant", "content": respuesta})
-
-            tools_used = ["buscar_documentos"]  # Marcar que sí se buscó
+    historial.append({"role": "assistant", "content": respuesta})
 
     # ── OUTPUT GUARDRAIL ──
+    tools_used = ["buscar_documentos"] if has_results else []
     respuesta = check_output(respuesta, tools_used)
 
     return respuesta, historial
