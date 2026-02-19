@@ -3,8 +3,11 @@ Agente RAG con dos fuentes: API externa + Documentos locales
 Soporta proveedores LLM: Anthropic y OpenAI-compatible.
 """
 import json
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import httpx
 from app.vector_store import VectorStore
