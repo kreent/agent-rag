@@ -409,9 +409,45 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
             f"LLM_PROVIDER no soportado: {LLM_PROVIDER}. Usa 'anthropic' o 'openai_compatible'."
         )
 
-    # ── OUTPUT GUARDRAIL ──
-    # Detectar qué herramientas se usaron revisando el historial
+    # ── SAFETY NET: Si el LLM no usó herramientas, forzar búsqueda ──
     tools_used = _extract_tools_used(historial)
+    if not tools_used:
+        logger.warning("LLM no usó herramientas. Forzando búsqueda automática...")
+        search_results = ejecutar_busqueda_documentos(mensaje, num_results=5)
+
+        # Si hay resultados relevantes, reintentar con contexto
+        if search_results and "No se encontraron" not in search_results:
+            # Remover la respuesta vacía del LLM del historial
+            if historial and historial[-1].get("role") == "assistant":
+                historial.pop()
+
+            # Inyectar resultados como contexto del sistema
+            historial.append({
+                "role": "user",
+                "content": (
+                    f"[SISTEMA] Se realizó una búsqueda automática con la consulta del usuario. "
+                    f"Estos son los resultados encontrados en la base de conocimiento:\n\n"
+                    f"{search_results}\n\n"
+                    f"Usa esta información para responder la pregunta original del usuario: {mensaje}"
+                ),
+            })
+
+            # Segundo intento con los resultados inyectados
+            if LLM_PROVIDER == "anthropic":
+                respuesta, historial = _chat_with_anthropic("", historial)
+            else:
+                client = _get_openai_client()
+                response = client.chat.completions.create(
+                    model=OPENAI_MODEL,
+                    messages=[{"role": "system", "content": SYSTEM_PROMPT}] + historial,
+                    temperature=0,
+                )
+                respuesta = response.choices[0].message.content or ""
+                historial.append({"role": "assistant", "content": respuesta})
+
+            tools_used = ["buscar_documentos"]  # Marcar que sí se buscó
+
+    # ── OUTPUT GUARDRAIL ──
     respuesta = check_output(respuesta, tools_used)
 
     return respuesta, historial
