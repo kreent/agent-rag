@@ -1,69 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAG Agent — Chat</title>
-  <meta name="description" content="Asistente inteligente con acceso a documentos y datos de APIs externas.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <title>Agente de Búsqueda RAG</title>
+  <meta name="description" content="Consulta información procesada por inteligencia artificial.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
   <div class="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <div class="header-logo">🤖</div>
-        <div class="header-info">
-          <h1>RAG Agent</h1>
-          <div class="status">En línea</div>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">FUENTES DE DATOS</h3>
+        <div class="source-item">
+          <div class="source-icon" style="background: #e8f4fd; color: #1a7fb5;">📄</div>
+          <div class="source-info">
+            <strong>Documentos Internos</strong>
+            <span id="docCountSidebar">Cargando...</span>
+          </div>
         </div>
-      </div>
-      <div class="header-stats">
-        <div class="stat">
-          <div class="stat-value" id="docCount">—</div>
-          <div class="stat-label">Documentos</div>
+        <div class="source-item">
+          <div class="source-icon" style="background: #e8fdf0; color: #1ab56a;">🌐</div>
+          <div class="source-info">
+            <strong>Datos de API</strong>
+            <span>Indexados y actualizados</span>
+          </div>
         </div>
-        <button class="btn-new-chat" id="newChatBtn">+ Nuevo chat</button>
-      </div>
-    </header>
-
-    <!-- Chat -->
-    <div class="chat-container">
-      <div class="messages" id="messages">
-        <!-- Welcome Screen -->
-        <div class="welcome" id="welcome">
-          <div class="welcome-icon">🧠</div>
-          <h2>¿En qué puedo ayudarte?</h2>
-          <p>Tengo acceso a documentos internos y datos de APIs externas. Pregúntame lo que necesites.</p>
-          <div class="suggestions">
-            <button class="suggestion">¿Qué documentos tienes?</button>
-            <button class="suggestion">¿Cuál es el organigrama?</button>
-            <button class="suggestion">Buscar información sobre alertas</button>
+        <div class="source-item">
+          <div class="source-icon" style="background: #f0e8fd; color: #7b1ab5;">📊</div>
+          <div class="source-info">
+            <strong>Base de Conocimiento</strong>
+            <span>Búsqueda semántica activa</span>
           </div>
         </div>
       </div>
 
-      <!-- Typing Indicator -->
-      <div class="typing-indicator" id="typingIndicator">
-        <div class="message-avatar" style="background: var(--bg-glass-hover); border: 1px solid var(--border-glass);">🤖</div>
-        <div class="typing-dots">
-          <span></span><span></span><span></span>
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">CONSULTAS RECIENTES</h3>
+        <ul class="recent-list" id="recentList">
+          <li class="recent-empty">Aún no hay consultas</li>
+        </ul>
+      </div>
+
+      <button class="btn-new-chat" id="newChatBtn">
+        <span>+</span> Nuevo Chat
+      </button>
+    </aside>
+
+    <!-- Mobile sidebar toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Header -->
+      <header class="main-header">
+        <h1>Agente de Búsqueda RAG</h1>
+        <p>Consulta información técnica procesada por inteligencia artificial.</p>
+      </header>
+
+      <!-- Chat Area -->
+      <div class="chat-area" id="chatArea">
+        <div class="messages" id="messages">
+          <!-- Welcome message from agent -->
+          <div class="message agent">
+            <div class="message-avatar">🤖</div>
+            <div class="message-bubble">
+              <p>¡Hola! Soy el asistente inteligente. ¿En qué puedo ayudarte hoy? Puedo buscar información en documentos
+                internos y datos indexados desde APIs externas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+          <div class="message-avatar">🤖</div>
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
 
-      <!-- Input -->
+      <!-- Input Area -->
       <div class="input-area">
-        <div class="input-wrapper">
-          <textarea
-            id="chatInput"
-            placeholder="Escribe tu pregunta..."
-            rows="1"
-          ></textarea>
+        <div class="input-container">
+          <textarea id="chatInput" placeholder="Escribe tu consulta aquí..." rows="1"></textarea>
+          <button class="btn-send" id="sendBtn" title="Enviar">➤</button>
         </div>
-        <button class="btn-send" id="sendBtn" title="Enviar">➤</button>
+        <div class="input-actions">
+          <button class="action-link" id="regenerateBtn" style="display:none">↻ Re-generar respuesta</button>
+        </div>
       </div>
-    </div>
+
+      <!-- Suggestions Bar -->
+      <div class="suggestions-bar">
+        <span class="suggestions-label">SUGERENCIAS RÁPIDAS:</span>
+        <div class="suggestions">
+          <button class="suggestion">¿Qué documentos tienes?</button>
+          <button class="suggestion">¿Cuál es el organigrama?</button>
+          <button class="suggestion">Buscar información sobre alertas</button>
+        </div>
+        <button class="btn-theme-toggle" id="themeToggle" title="Modo oscuro">🌙</button>
+      </div>
+    </main>
   </div>
 
   <!-- Error Toast -->
@@ -71,4 +116,5 @@
 
   <script src="/static/chat.js"></script>
 </body>
+
 </html>
