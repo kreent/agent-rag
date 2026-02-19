@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Agent — Chat</title>
+  <meta name="description" content="Asistente inteligente con acceso a documentos y datos de APIs externas.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="header-logo">🤖</div>
+        <div class="header-info">
+          <h1>RAG Agent</h1>
+          <div class="status">En línea</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat">
+          <div class="stat-value" id="docCount">—</div>
+          <div class="stat-label">Documentos</div>
+        </div>
+        <button class="btn-new-chat" id="newChatBtn">+ Nuevo chat</button>
+      </div>
+    </header>
+
+    <!-- Chat -->
+    <div class="chat-container">
+      <div class="messages" id="messages">
+        <!-- Welcome Screen -->
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon">🧠</div>
+          <h2>¿En qué puedo ayudarte?</h2>
+          <p>Tengo acceso a documentos internos y datos de APIs externas. Pregúntame lo que necesites.</p>
+          <div class="suggestions">
+            <button class="suggestion">¿Qué documentos tienes?</button>
+            <button class="suggestion">¿Cuál es el organigrama?</button>
+            <button class="suggestion">Buscar información sobre alertas</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="message-avatar" style="background: var(--bg-glass-hover); border: 1px solid var(--border-glass);">🤖</div>
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="chatInput"
+            placeholder="Escribe tu pregunta..."
+            rows="1"
+          ></textarea>
+        </div>
+        <button class="btn-send" id="sendBtn" title="Enviar">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="error-toast" id="errorToast"></div>
+
+  <script src="/static/chat.js"></script>
+</body>
+</html>

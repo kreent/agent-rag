@@ -3,9 +3,12 @@ API REST para el agente RAG.
 """
 import os
 import uuid
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.agent import chat
@@ -43,6 +46,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Servir archivos estáticos (CSS, JS)
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -173,6 +181,19 @@ async def trigger_reindex(full: bool = False):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════════════
+# CHAT UI
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/")
+async def serve_chat_ui():
+    """Sirve la interfaz de chat."""
+    index_file = Path(__file__).parent / "static" / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {"message": "RAG Agent API is running. No UI found."}
 
 
 # ═══════════════════════════════════════════════════════════
