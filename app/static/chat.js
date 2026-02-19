@@ -126,7 +126,7 @@ function addMessage(role, text) {
 
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
-    avatar.textContent = role === 'user' ? '👤' : '🤖';
+    avatar.innerHTML = role === 'user' ? '👤' : '<img src="/static/avatar.png" alt="Bot" class="avatar-img">';
 
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
@@ -246,7 +246,7 @@ function startNewChat() {
     // Keep only the welcome message
     messagesEl.innerHTML = `
     <div class="message agent">
-      <div class="message-avatar">🤖</div>
+      <div class="message-avatar"><img src="/static/avatar.png" alt="Bot" class="avatar-img"></div>
       <div class="message-bubble">
         <p>¡Hola! Soy el asistente inteligente. ¿En qué puedo ayudarte hoy?</p>
       </div>
