@@ -278,6 +278,19 @@ body {
   background: var(--bg-main);
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 .main-header h1 {
   font-size: 22px;
   font-weight: 700;
