@@ -156,8 +156,7 @@ def ejecutar_busqueda_documentos(query: str, num_results: int = 5) -> str:
         if not all_results:
             return "No encontré información relevante en la base de conocimiento."
 
-        # Ordenar por score y tomar los mejores
-        all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        # API results van primero (ya están filtrados por relevancia), luego documentos
         top_results = all_results[:num_results]
 
         respuesta = []
