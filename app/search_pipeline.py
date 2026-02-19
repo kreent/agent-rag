@@ -220,8 +220,8 @@ class CrossEncoderReranker:
     def __init__(self):
         if self._initialized:
             return
-        # Modelo cross-encoder multilingual (ligero, ~80MB)
-        model_name = "cross-encoder/ms-marco-multilingual-MiniLM-L6-v2"
+        # Modelo cross-encoder multilingual (mMARCO multilingual)
+        model_name = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
         logger.info(f"Cargando cross-encoder: {model_name}")
         self.model = CrossEncoder(model_name)
         self._initialized = True
