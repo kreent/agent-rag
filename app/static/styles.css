@@ -274,8 +274,10 @@ body {
 
 .main-header {
   padding: 20px 28px 12px;
-  border-bottom: 1px solid var(--border);
   background: var(--bg-main);
+  border-bottom: solid 2px transparent;
+  border-image: linear-gradient(0.25turn, #0090FF, #02b1c6, #00C69B);
+  border-image-slice: 1;
 }
 
 .header-content {
@@ -294,7 +296,7 @@ body {
 .main-header h1 {
   font-size: 22px;
   font-weight: 700;
-  color: var(--accent);
+  color: #0943b5;
   margin-bottom: 4px;
 }
 
