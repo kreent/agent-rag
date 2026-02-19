@@ -126,7 +126,7 @@ function addMessage(role, text) {
 
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
-    avatar.innerHTML = role === 'user' ? '👤' : '<img src="/static/avatar.png" alt="Bot" class="avatar-img">';
+    avatar.innerHTML = role === 'user' ? '<img src="/static/user.png" alt="User" class="avatar-img">' : '<img src="/static/avatar.png" alt="Bot" class="avatar-img">';
 
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
