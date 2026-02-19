@@ -147,6 +147,12 @@ body {
   flex-shrink: 0;
 }
 
+.source-icon-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .source-info strong {
   display: block;
   font-size: 13px;
