@@ -126,8 +126,34 @@ def ejecutar_busqueda_documentos(query: str, num_results: int = 5) -> str:
     """Busca en el vector store (documentos + datos de API) y formatea resultados."""
     try:
         all_results = []
+        seen_ids = set()
 
-        # Buscar en datos de API primero (si existen)
+        # 1. Búsqueda por TEXTO en datos de API (para nombres propios)
+        try:
+            # Buscar palabras clave del query en el contenido
+            for word in query.split():
+                if len(word) < 3:
+                    continue
+                text_results = vector_store.collection.get(
+                    where={"type": "api_data"},
+                    where_document={"$contains": word.upper()},
+                    include=["documents", "metadatas"],
+                    limit=5,
+                )
+                for i in range(len(text_results["ids"])):
+                    doc_id = text_results["ids"][i]
+                    if doc_id not in seen_ids:
+                        seen_ids.add(doc_id)
+                        all_results.append({
+                            "content": text_results["documents"][i],
+                            "source": text_results["metadatas"][i].get("source", "API"),
+                            "score": 0.95,  # Alta relevancia por coincidencia textual
+                            "origin": "api",
+                        })
+        except Exception:
+            pass
+
+        # 2. Búsqueda VECTORIAL en datos de API (para conceptos/temas)
         try:
             api_results = vector_store.collection.query(
                 query_embeddings=vector_store.embedder.encode([query]).tolist(),
@@ -136,19 +162,21 @@ def ejecutar_busqueda_documentos(query: str, num_results: int = 5) -> str:
                 include=["documents", "metadatas", "distances"],
             )
             for i in range(len(api_results["ids"][0])):
-                all_results.append({
-                    "content": api_results["documents"][0][i],
-                    "source": api_results["metadatas"][0][i].get("source", "API"),
-                    "score": 1 - api_results["distances"][0][i],
-                    "origin": "api",
-                })
+                doc_id = api_results["ids"][0][i]
+                if doc_id not in seen_ids:
+                    seen_ids.add(doc_id)
+                    all_results.append({
+                        "content": api_results["documents"][0][i],
+                        "source": api_results["metadatas"][0][i].get("source", "API"),
+                        "score": 1 - api_results["distances"][0][i],
+                        "origin": "api",
+                    })
         except Exception:
-            pass  # No hay datos de API o error en filtro
+            pass
 
-        # Buscar en todos los documentos
+        # 3. Búsqueda VECTORIAL en todos los documentos
         doc_results = vector_store.buscar(query, k=num_results)
         for doc in doc_results:
-            # Evitar duplicados de API
             if not any(r["content"] == doc["content"] for r in all_results):
                 doc["origin"] = "doc"
                 all_results.append(doc)
