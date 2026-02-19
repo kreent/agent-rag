@@ -236,6 +236,16 @@ def indexar(full_reindex: bool = False):
     
     # Guardar estado
     save_state({"files": current_files})
+
+    # Reconstruir índice BM25 para búsqueda híbrida
+    if total_docs > 0:
+        try:
+            from app.search_pipeline import HybridSearchPipeline
+            pipeline = HybridSearchPipeline()
+            pipeline.build_bm25()
+            print("✓ Índice BM25 reconstruido")
+        except Exception as e:
+            print(f"⚠️ No se pudo reconstruir BM25: {e}")
     
     # Resumen
     print("\n" + "=" * 60)

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import httpx
 from app.vector_store import VectorStore
+from app.search_pipeline import HybridSearchPipeline
 
 # Proveedor LLM
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
@@ -22,8 +23,17 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", os.getenv("LLM_MODEL", "gpt-4o-mini"))
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
-# Inicializar vector store una sola vez
+# Inicializar vector store y search pipeline una sola vez
 vector_store = VectorStore()
+_search_pipeline = None
+
+def _get_search_pipeline() -> HybridSearchPipeline:
+    """Lazy init del pipeline de búsqueda híbrida."""
+    global _search_pipeline
+    if _search_pipeline is None:
+        _search_pipeline = HybridSearchPipeline()
+        _search_pipeline.build_bm25()
+    return _search_pipeline
 
 # Definición de herramientas base
 TOOLS = [
@@ -401,10 +411,12 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
         historial.append({"role": "assistant", "content": rejection_reason})
         return rejection_reason, historial
 
-    # ── PRE-SEARCH: Siempre buscar en la base de conocimiento ──
-    logger.info(f"Pre-búsqueda para: {mensaje}")
-    search_results = ejecutar_busqueda_documentos(mensaje, num_results=5)
-    has_results = search_results and "No encontré" not in search_results and "Error" not in search_results
+    # ── PRE-SEARCH: Hybrid Search (BM25 + Dense + RRF + Re-ranking) ──
+    logger.info(f"Pre-búsqueda híbrida para: {mensaje}")
+    pipeline = _get_search_pipeline()
+    raw_results = pipeline.search(mensaje, top_k=5)
+    search_results = pipeline.format_results(raw_results)
+    has_results = len(raw_results) > 0
 
     if has_results:
         logger.info(f"Resultados encontrados: {len(search_results)} chars")
