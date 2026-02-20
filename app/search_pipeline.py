@@ -371,22 +371,39 @@ class HybridSearchPipeline:
         if not results:
             return "No se encontraron resultados relevantes en la base de conocimiento."
 
+        import os
         from pathlib import Path
+
+        files_base_url = os.getenv("FILES_BASE_URL", "").rstrip("/")
 
         formatted = []
         for i, doc in enumerate(results, 1):
-            source = doc.get("source", "Desconocido")
-            if source and source not in ("api_externa", "API"):
+            source_raw = doc.get("source", "Desconocido")
+            source_name = source_raw
+            doc_link = ""
+
+            if source_raw and source_raw not in ("api_externa", "API"):
                 try:
-                    source = Path(source).name
+                    source_name = Path(source_raw).name
+                    # Generar link público al documento
+                    if files_base_url and source_raw.startswith("/files"):
+                        # /files/subfolder/doc.pdf → URL_BASE/subfolder/doc.pdf
+                        relative_path = source_raw.replace("/files/", "", 1)
+                        doc_link = f"{files_base_url}/{relative_path}"
                 except Exception:
                     pass
 
             rerank_score = doc.get("rerank_score", 0)
             content = doc["content"][:600]
 
-            formatted.append(
-                f"**[{i}] {source}** (relevancia: {rerank_score:.2f})\n{content}"
-            )
+            if doc_link:
+                formatted.append(
+                    f"**[{i}] {source_name}** (relevancia: {rerank_score:.2f})\n"
+                    f"📎 Documento: {doc_link}\n{content}"
+                )
+            else:
+                formatted.append(
+                    f"**[{i}] {source_name}** (relevancia: {rerank_score:.2f})\n{content}"
+                )
 
         return "\n\n---\n\n".join(formatted)

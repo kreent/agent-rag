@@ -29,6 +29,7 @@ services:
 
       # Configuración
       - FILES_PATH=/files
+      - FILES_BASE_URL=${FILES_BASE_URL:-http://ec2-56-124-88-191.sa-east-1.compute.amazonaws.com/sites/default/files}
       - VECTOR_DB_PATH=/app/data/chroma_db
       - CHUNK_SIZE=1000
       - CHUNK_OVERLAP=200
