@@ -434,7 +434,16 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
         )
     else:
         logger.warning(f"No se encontraron resultados para: {mensaje}")
-        enriched_prompt = SYSTEM_PROMPT
+        enriched_prompt = SYSTEM_PROMPT + (
+            "\n\n## CONTEXTO DE LA BASE DE CONOCIMIENTO\n"
+            "Se realizó una búsqueda automática y NO se encontraron resultados relevantes.\n"
+            "Si la pregunta del usuario parece estar relacionada con temas de la base de conocimiento "
+            "(meteorología, hidrología, clima, alertas, organigrama, entidades, etc.), "
+            "responde: \"No encontré información específica sobre este tema en la base de conocimiento. "
+            "Te sugiero reformular tu pregunta o intentar con otros términos.\"\n"
+            "Si la pregunta es claramente fuera de dominio (matemáticas, programación, poemas, recetas, etc.), "
+            "usa el mensaje de rechazo estándar."
+        )
 
     # ── LLM CALL (sin tools, usando el contexto pre-buscado) ──
     if historial is None:
