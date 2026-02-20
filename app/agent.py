@@ -418,7 +418,7 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
     # ── PRE-SEARCH: Hybrid Search (BM25 + Dense + RRF + Re-ranking) ──
     logger.info(f"Pre-búsqueda híbrida para: {mensaje}")
     pipeline = _get_search_pipeline()
-    raw_results = pipeline.search(mensaje, top_k=5)
+    raw_results = pipeline.search(mensaje, top_k=8)
     search_results = pipeline.format_results(raw_results)
     has_results = len(raw_results) > 0
 
