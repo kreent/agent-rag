@@ -373,6 +373,7 @@ class HybridSearchPipeline:
 
         import os
         from pathlib import Path
+        from urllib.parse import quote
 
         files_base_url = os.getenv("FILES_BASE_URL", "").rstrip("/")
 
@@ -389,7 +390,8 @@ class HybridSearchPipeline:
                     if files_base_url and source_raw.startswith("/files"):
                         # /files/subfolder/doc.pdf → URL_BASE/subfolder/doc.pdf
                         relative_path = source_raw.replace("/files/", "", 1)
-                        doc_link = f"{files_base_url}/{relative_path}"
+                        encoded_path = quote(relative_path, safe="/")
+                        doc_link = f"{files_base_url}/{encoded_path}"
                 except Exception:
                     pass
 
@@ -399,7 +401,7 @@ class HybridSearchPipeline:
             if doc_link:
                 formatted.append(
                     f"**[{i}] {source_name}** (relevancia: {rerank_score:.2f})\n"
-                    f"📎 Documento: {doc_link}\n{content}"
+                    f"📎 Link al documento: [{source_name}]({doc_link})\n{content}"
                 )
             else:
                 formatted.append(
