@@ -2,7 +2,9 @@
  * RAG Agent Chat — Frontend Logic v2
  */
 
-const API_BASE = window.location.origin;
+// Empty base → URLs relativas al path actual.
+// Funciona tanto en raíz (/) como bajo subpath (/rag/) sin recompilar.
+const API_BASE = '.';
 const SESSION_KEY = 'rag_chat_session';
 const HISTORY_KEY = 'rag_chat_history';
 const RECENT_KEY = 'rag_chat_recent';
@@ -126,7 +128,7 @@ function addMessage(role, text) {
 
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
-    avatar.innerHTML = role === 'user' ? '<img src="/static/user.png" alt="User" class="avatar-img">' : '<img src="/static/avatar.png" alt="Bot" class="avatar-img">';
+    avatar.innerHTML = role === 'user' ? '<img src="static/user.png" alt="User" class="avatar-img">' : '<img src="static/avatar.png" alt="Bot" class="avatar-img">';
 
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
@@ -246,7 +248,7 @@ function startNewChat() {
     // Keep only the welcome message
     messagesEl.innerHTML = `
     <div class="message agent">
-      <div class="message-avatar"><img src="/static/avatar.png" alt="Bot" class="avatar-img"></div>
+      <div class="message-avatar"><img src="static/avatar.png" alt="Bot" class="avatar-img"></div>
       <div class="message-bubble">
         <p>¡Hola! Soy el asistente inteligente. ¿En qué puedo ayudarte hoy?</p>
       </div>
