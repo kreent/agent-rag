@@ -5,6 +5,8 @@ Soporta proveedores LLM: Anthropic y OpenAI-compatible.
 import json
 import logging
 import os
+import re
+import time
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -131,6 +133,105 @@ def _build_openai_tools() -> list[dict]:
             }
         )
     return converted
+
+
+def _parse_quota_error(error_str: str) -> dict | None:
+    """Detecta errores 429 / RESOURCE_EXHAUSTED y extrae metadata útil.
+
+    Returns dict {is_daily, retry_seconds} si es error de cuota, None si no lo es.
+    """
+    if "429" not in error_str and "RESOURCE_EXHAUSTED" not in error_str.upper():
+        return None
+    is_daily = "PerDay" in error_str or "per day" in error_str.lower()
+    retry_match = re.search(
+        r"['\"]retryDelay['\"]\s*:\s*['\"]?(\d+(?:\.\d+)?)s", error_str
+    )
+    retry_seconds = int(float(retry_match.group(1))) if retry_match else None
+    return {"is_daily": is_daily, "retry_seconds": retry_seconds}
+
+
+def _llm_error_message(error: Exception) -> str:
+    """Convierte una excepción del cliente LLM en un mensaje amigable de Aura."""
+    error_str = str(error)
+    quota = _parse_quota_error(error_str)
+
+    if quota:
+        if quota["is_daily"]:
+            return (
+                "⏳ Hemos alcanzado el límite diario de consultas del modelo gratuito. "
+                "El servicio se restablecerá automáticamente en unas horas. "
+                "Si necesitas seguir consultando, por favor contacta al administrador "
+                "para ampliar la cuota."
+            )
+        secs = quota["retry_seconds"]
+        if secs and secs <= 90:
+            return (
+                f"⏳ Estoy recibiendo muchas consultas en este momento. "
+                f"Por favor intenta de nuevo en {secs} segundos."
+            )
+        return (
+            "⏳ El servicio está temporalmente sobrecargado. "
+            "Por favor intenta de nuevo en unos minutos."
+        )
+
+    err_lower = error_str.lower()
+    if "503" in error_str or "overloaded" in err_lower:
+        return (
+            "⏳ El modelo está temporalmente sobrecargado. "
+            "Intenta de nuevo en unos segundos."
+        )
+    if any(code in error_str for code in ("401", "403")) or "authentication" in err_lower:
+        return (
+            "❌ Hay un problema con la autenticación al servicio. "
+            "Por favor contacta al administrador."
+        )
+    if "timeout" in err_lower or "timed out" in err_lower:
+        return (
+            "⏳ La consulta tardó demasiado. "
+            "Intenta con una pregunta más específica o vuelve a intentarlo."
+        )
+
+    logger.exception("Error LLM no categorizado")
+    return (
+        "❌ Hubo un problema al generar la respuesta. "
+        "Por favor intenta de nuevo en unos momentos."
+    )
+
+
+def _call_openai_with_retry(client, model: str, messages: list, max_retries: int = 1):
+    """Llama al endpoint chat.completions con auto-retry para 429 con backoff corto.
+
+    Si el error indica un retryDelay <= 35s y no es cuota diaria, espera y reintenta
+    una vez. Para errores no-recuperables (cuota diaria, auth, etc.) propaga la
+    excepción al caller.
+    """
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0,
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            last_error = e
+            quota = _parse_quota_error(str(e))
+            recoverable = (
+                quota
+                and not quota["is_daily"]
+                and quota["retry_seconds"] is not None
+                and quota["retry_seconds"] <= 35
+                and attempt < max_retries
+            )
+            if not recoverable:
+                raise
+            wait = quota["retry_seconds"] + 1
+            logger.warning(
+                f"Rate limit (429), reintentando en {wait}s (intento {attempt+1}/{max_retries+1})"
+            )
+            time.sleep(wait)
+    raise last_error  # pragma: no cover
 
 
 def _get_anthropic_client():
@@ -451,30 +552,31 @@ def chat(mensaje: str, historial: list = None) -> tuple[str, list]:
         historial = []
     historial.append({"role": "user", "content": mensaje})
 
-    if LLM_PROVIDER == "anthropic":
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model=ANTHROPIC_MODEL,
-            max_tokens=4096,
-            system=enriched_prompt,
-            messages=historial,
-        )
-        respuesta = "".join(
-            block.text for block in response.content if hasattr(block, "text")
-        )
-    elif LLM_PROVIDER in {"openai", "openai_compatible", "ollama", "groq", "openrouter"}:
-        client = _get_openai_client()
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[{"role": "system", "content": enriched_prompt}] + historial,
-            temperature=0,
-        )
-        respuesta = response.choices[0].message.content or ""
-    else:
-        raise ValueError(
-            f"LLM_PROVIDER no soportado: {LLM_PROVIDER}. Usa 'anthropic' o 'openai_compatible'."
-        )
+    try:
+        if LLM_PROVIDER == "anthropic":
+            client = _get_anthropic_client()
+            response = client.messages.create(
+                model=ANTHROPIC_MODEL,
+                max_tokens=4096,
+                system=enriched_prompt,
+                messages=historial,
+            )
+            respuesta = "".join(
+                block.text for block in response.content if hasattr(block, "text")
+            )
+        elif LLM_PROVIDER in {"openai", "openai_compatible", "ollama", "groq", "openrouter"}:
+            client = _get_openai_client()
+            respuesta = _call_openai_with_retry(
+                client,
+                OPENAI_MODEL,
+                [{"role": "system", "content": enriched_prompt}] + historial,
+            )
+        else:
+            raise ValueError(
+                f"LLM_PROVIDER no soportado: {LLM_PROVIDER}. Usa 'anthropic' o 'openai_compatible'."
+            )
+    except Exception as e:
+        respuesta = _llm_error_message(e)
 
     historial.append({"role": "assistant", "content": respuesta})
 
