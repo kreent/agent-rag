@@ -9,7 +9,6 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from unstructured.partition.auto import partition
 from tqdm import tqdm
 
 from app.vector_store import VectorStore
@@ -83,24 +82,49 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
 
 
 def extract_text_from_file(filepath: str) -> str:
-    """Extrae texto de cualquier tipo de archivo soportado."""
+    """Extrae texto usando libs puro-Python (evita OpenCV/FIPS conflict).
+    Soporta PDF (texto), DOCX, XLSX, TXT/MD/CSV/HTML. PDFs escaneados no
+    se OCRean — quedarán vacíos.
+    """
+    ext = Path(filepath).suffix.lower()
     try:
-        elements = partition(
-            filename=filepath,
-            strategy="auto",  # Usa OCR si es necesario
-            include_page_breaks=True,
-            languages=["spa"],  # Español
-        )
-        
-        # Unir todos los elementos
-        text_parts = []
-        for element in elements:
-            text = str(element).strip()
-            if text:
-                text_parts.append(text)
-        
-        return "\n\n".join(text_parts)
-    
+        if ext == ".pdf":
+            import pypdf
+            text_parts = []
+            with open(filepath, "rb") as f:
+                reader = pypdf.PdfReader(f)
+                for page in reader.pages:
+                    txt = page.extract_text() or ""
+                    if txt.strip():
+                        text_parts.append(txt.strip())
+            return "\n\n".join(text_parts)
+
+        if ext == ".docx":
+            import docx
+            doc = docx.Document(filepath)
+            return "\n\n".join(p.text for p in doc.paragraphs if p.text.strip())
+
+        if ext == ".xlsx":
+            from openpyxl import load_workbook
+            wb = load_workbook(filepath, read_only=True, data_only=True)
+            text_parts = []
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                text_parts.append(f"## Hoja: {sheet_name}")
+                for row in ws.iter_rows(values_only=True):
+                    row_text = " | ".join(str(c) for c in row if c is not None)
+                    if row_text.strip():
+                        text_parts.append(row_text)
+            wb.close()
+            return "\n".join(text_parts)
+
+        if ext in (".txt", ".md", ".csv", ".html", ".htm"):
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+
+        print(f"⚠️ Extensión no soportada por extractor puro-Python: {filepath}")
+        return ""
+
     except Exception as e:
         print(f"⚠️ Error procesando {filepath}: {str(e)}")
         return ""
