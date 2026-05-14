@@ -4,125 +4,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agente de Búsqueda RAG</title>
-  <meta name="description" content="Consulta información procesada por inteligencia artificial.">
+  <title>Aura — Inteligencia climática del IDEAM</title>
+  <meta name="description" content="Aura, tu asistente de inteligencia climática del IDEAM.">
   <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
-  <link rel="stylesheet" href="static/styles.css">
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/styles.css?v=aura4">
 </head>
 
 <body>
   <div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">FUENTES DE DATOS</h3>
-        <div class="source-item">
-          <div class="source-icon">
-            <img src="static/documentos-internos.png" alt="Docs" class="source-icon-img">
-          </div>
-          <div class="source-info">
-            <strong>Documentos Internos</strong>
-            <span id="docCountSidebar">Cargando...</span>
-          </div>
-        </div>
-        <div class="source-item">
-          <div class="source-icon">
-            <img src="static/api.png" alt="API" class="source-icon-img">
-          </div>
-          <div class="source-info">
-            <strong>Datos de API</strong>
-            <span>Indexados y actualizados</span>
-          </div>
-        </div>
-        <div class="source-item">
-          <div class="source-icon">
-            <img src="static/base.png" alt="Base" class="source-icon-img">
-          </div>
-          <div class="source-info">
-            <strong>Base de Conocimiento</strong>
-            <span>Búsqueda semántica activa</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">CONSULTAS RECIENTES</h3>
-        <ul class="recent-list" id="recentList">
-          <li class="recent-empty">Aún no hay consultas</li>
-        </ul>
+    <!-- ───── SIDEBAR ───── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <img src="static/aura.png" alt="Aura" class="sidebar-logo">
       </div>
 
       <button class="btn-new-chat" id="newChatBtn">
-        <span>+</span> Nuevo Chat
+        <span class="plus">+</span> Nueva conversación
       </button>
+
+      <div class="sidebar-info">
+        <p>Aura usa inteligencia artificial para entregarte información confiable del IDEAM.</p>
+        <a href="https://www.ideam.gov.co" target="_blank" rel="noopener" class="info-link">Conoce más →</a>
+      </div>
+
+      <div class="sidebar-mountains" aria-hidden="true">
+        <svg viewBox="0 0 220 90" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mtn1" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#5FC2B5"/>
+              <stop offset="100%" stop-color="#1E5099"/>
+            </linearGradient>
+            <linearGradient id="mtn2" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#28A89A"/>
+              <stop offset="100%" stop-color="#1B3A6F"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,90 L60,30 L100,55 L140,15 L220,90 Z" fill="url(#mtn1)" opacity="0.85"/>
+          <path d="M0,90 L40,55 L90,70 L160,35 L220,90 Z" fill="url(#mtn2)"/>
+        </svg>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="ideam-badge">
+          <span class="ideam-name">IDEAM</span>
+          <span class="ideam-sub">Instituto de Hidrología,<br>Meteorología y Estudios<br>Ambientales</span>
+        </div>
+        <span id="docCountSidebar" class="doc-count">Cargando…</span>
+      </div>
     </aside>
 
     <!-- Mobile sidebar toggle -->
-    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-    <!-- Mobile sidebar overlay -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Abrir menú">☰</button>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Main Content -->
+    <!-- ───── MAIN ───── -->
     <main class="main">
+
       <!-- Header -->
       <header class="main-header">
-        <h1>Agente de Búsqueda RAG</h1>
-        <p>Consulta información técnica procesada por inteligencia artificial.</p>
+        <button class="sidebar-collapse" id="sidebarCollapse" aria-label="Colapsar menú">‹</button>
+        <div class="main-title">
+          <h1>Hola, soy <span class="brand">Aura</span></h1>
+          <p>Tu asistente de inteligencia climática del IDEAM</p>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="historyBtn" title="Historial">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2M12 3a9 9 0 1 0 9 9"/></svg>
+          </button>
+          <button class="icon-btn" title="Ayuda">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+          </button>
+        </div>
       </header>
 
-      <!-- Chat Area -->
-      <div class="chat-area" id="chatArea">
-        <div class="messages" id="messages">
-          <!-- Welcome message from agent -->
-          <div class="message agent">
-            <div class="message-avatar"><img src="static/avatar.png" alt="Bot" class="avatar-img"></div>
-            <div class="message-bubble">
-              <p>¡Hola! Soy el asistente inteligente. ¿En qué puedo ayudarte hoy? Puedo buscar información en documentos
-                internos y datos indexados desde APIs externas.</p>
-            </div>
+      <!-- Chat content -->
+      <div class="chat-area chat-empty" id="chatArea">
+
+        <!-- Welcome screen (hidden once user sends first message) -->
+        <div class="welcome" id="welcome">
+          <h2 class="welcome-title">¡Hola! Soy Aura <span class="leaf">🌿</span></h2>
+          <p class="welcome-sub">
+            Estoy aquí para ayudarte con información climática,<br>
+            meteorológica y ambiental de Colombia.
+          </p>
+
+          <div class="quick-grid">
+            <button class="quick-card" data-q="¿Quién es la directora del IDEAM?">
+              <div class="quick-icon icon-person">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span>¿Quién es la directora del IDEAM?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Cuál es la ciudad donde más llueve en Colombia?">
+              <div class="quick-icon icon-rain">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 13a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.7 1.4A4 4 0 0 0 6 14"/><path d="M8 18l1 3M12 18l1 3M16 18l1 3"/></svg>
+              </div>
+              <span>¿Cuál es la ciudad donde más llueve en Colombia?</span>
+            </button>
+
+            <button class="quick-card" data-q="Buscar información sobre alertas">
+              <div class="quick-icon icon-alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+              </div>
+              <span>Buscar información sobre alertas</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Qué sabes del huracán Beryl?">
+              <div class="quick-icon icon-hurricane">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 12a4 4 0 0 0-4-4H3"/><path d="M12 12a4 4 0 0 1 4 4h5"/><path d="M12 12a4 4 0 0 0 4-4V3"/><path d="M12 12a4 4 0 0 1-4 4v5"/></svg>
+              </div>
+              <span>¿Qué sabes del huracán Beryl?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Sabes las alertas hidrológicas del 4 de julio del 2024?">
+              <div class="quick-icon icon-water">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5C12 2.5 5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg>
+              </div>
+              <span>Alertas hidrológicas del 4 de julio 2024</span>
+            </button>
           </div>
         </div>
 
-        <!-- Typing Indicator -->
+        <!-- Messages -->
+        <div class="messages" id="messages"></div>
+
+        <!-- Typing -->
         <div class="typing-indicator" id="typingIndicator">
-          <div class="message-avatar">🤖</div>
-          <div class="typing-dots">
-            <span></span><span></span><span></span>
-          </div>
+          <div class="agent-avatar"><img src="static/aura-chat.png" alt=""></div>
+          <div class="typing-dots"><span></span><span></span><span></span></div>
         </div>
       </div>
 
-      <!-- Input Area -->
+      <!-- Input -->
       <div class="input-area">
         <div class="input-container">
-          <textarea id="chatInput" placeholder="Escribe tu consulta aquí..." rows="1"></textarea>
-          <button class="btn-send" id="sendBtn" title="Enviar">➤</button>
+          <textarea id="chatInput" placeholder="Escribe tu pregunta aquí…" rows="1"></textarea>
+          <button class="btn-send" id="sendBtn" title="Enviar" aria-label="Enviar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
-        <div class="input-actions">
-          <button class="action-link" id="regenerateBtn" style="display:none">↻ Re-generar respuesta</button>
-        </div>
-      </div>
-
-      <!-- Suggestions Bar -->
-      <div class="suggestions-bar">
-        <span class="suggestions-label">SUGERENCIAS RÁPIDAS:</span>
-        <div class="suggestions">
-          <button class="suggestion">¿Quién es la directora del IDEAM?</button>
-          <button class="suggestion">¿Cuál es la ciudad donde más llueve en Colombia?</button>
-          <button class="suggestion">Buscar información sobre alertas</button>
-          <button class="suggestion">¿Qué sabes del huracán Beryl?</button>
-          <button class="suggestion">¿Sabes las alertas hidrológicas del 4 de julio del 2024?</button>
-        </div>
-        <button class="btn-theme-toggle" id="themeToggle" title="Modo oscuro">🌙</button>
+        <p class="disclaimer">⚠ Aura puede cometer errores. Verifica la información importante.</p>
       </div>
     </main>
   </div>
 
-  <!-- Error Toast -->
   <div class="error-toast" id="errorToast"></div>
-
-  <script src="static/chat.js"></script>
+  <script src="static/chat.js?v=aura4"></script>
 </body>
 
 </html>
