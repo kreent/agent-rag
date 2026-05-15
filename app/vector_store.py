@@ -1,6 +1,7 @@
 """
 Vector Store usando ChromaDB para búsqueda semántica de documentos.
 """
+import json
 import os
 import chromadb
 from chromadb.config import Settings
@@ -9,6 +10,7 @@ from sentence_transformers import SentenceTransformer
 VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "./data/chroma_db")
 COLLECTION_NAME = "documentos"
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+INDEX_STATE_FILE = os.getenv("INDEX_STATE_FILE", "./data/index_state.json")
 
 
 class VectorStore:
@@ -134,7 +136,12 @@ class VectorStore:
         )
     
     def stats(self) -> dict:
-        """Retorna estadísticas del vector store."""
+        """Retorna estadísticas del vector store.
+
+        - total_files: número de archivos fuente realmente indexados.
+        - total_chunks: número de fragmentos vectorizados (lo que tiene ChromaDB).
+        - total_documents: alias retro-compat (== total_chunks).
+        """
         try:
             count = self.collection.count()
         except Exception:
@@ -145,8 +152,23 @@ class VectorStore:
                 metadata={"hnsw:space": "cosine"}
             )
             count = self.collection.count()
+
+        total_files = 0
+        last_run = None
+        if os.path.exists(INDEX_STATE_FILE):
+            try:
+                with open(INDEX_STATE_FILE) as f:
+                    state = json.load(f)
+                total_files = len(state.get("files", {}))
+                last_run = state.get("last_run")
+            except Exception:
+                pass
+
         return {
-            "total_documents": count,
+            "total_files": total_files,
+            "total_chunks": count,
+            "total_documents": count,  # alias retro-compat (en realidad son chunks)
+            "last_indexed": last_run,
             "collection_name": COLLECTION_NAME,
-            "embedding_model": EMBEDDING_MODEL
+            "embedding_model": EMBEDDING_MODEL,
         }
