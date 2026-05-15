@@ -26,7 +26,8 @@ const errorToast     = document.getElementById('errorToast');
 const sidebarToggle  = document.getElementById('sidebarToggle');
 const sidebar        = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
-const quickCards     = document.querySelectorAll('.quick-card');
+// Toda celda con data-q es clickeable: quick-cards del welcome + question-items del sidebar
+const quickCards     = document.querySelectorAll('[data-q]');
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -195,7 +196,10 @@ async function loadStats() {
     const res = await fetch(`${API_BASE}/stats`);
     if (res.ok) {
       const data = await res.json();
-      docCountEl.textContent = `${data.total_documents.toLocaleString('es-CO')} documentos indexados`;
+      // Mostrar archivos reales (218), no fragmentos (14.444).
+      // Fallback a total_documents para compat con backend viejo.
+      const count = data.total_files ?? data.total_documents;
+      docCountEl.textContent = `${count.toLocaleString('es-CO')} documentos indexados`;
     }
   } catch {
     docCountEl.textContent = 'Sin conexión';

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/styles.css?v=aura4">
+  <link rel="stylesheet" href="static/styles.css?v=aura23">
 </head>
 
 <body>
@@ -27,33 +27,24 @@
         <span class="plus">+</span> Nueva conversación
       </button>
 
-      <div class="sidebar-info">
-        <p>Aura usa inteligencia artificial para entregarte información confiable del IDEAM.</p>
-        <a href="https://www.ideam.gov.co" target="_blank" rel="noopener" class="info-link">Conoce más →</a>
-      </div>
+      <nav class="sidebar-questions" aria-label="Preguntas sugeridas">
+        <h3 class="sidebar-section-title">Preguntas sugeridas</h3>
+        <ul class="question-list">
+          <li><button class="question-item" data-q="¿Quién es la directora del IDEAM?"><span class="dot dot-person"></span><span>¿Quién es la directora del IDEAM?</span></button></li>
+          <li><button class="question-item" data-q="¿Cuál es la ciudad donde más llueve en Colombia?"><span class="dot dot-rain"></span><span>¿Cuál es la ciudad donde más llueve en Colombia?</span></button></li>
+          <li><button class="question-item" data-q="¿Qué sabes del huracán Beryl?"><span class="dot dot-hurricane"></span><span>¿Qué sabes del huracán Beryl?</span></button></li>
+          <li><button class="question-item" data-q="¿Qué es el material particulado?"><span class="dot dot-air"></span><span>¿Qué es el material particulado?</span></button></li>
+          <li><button class="question-item" data-q="¿Cuánta deforestación hubo en la Amazonía colombiana?"><span class="dot dot-tree"></span><span>Deforestación en la Amazonía</span></button></li>
+          <li><button class="question-item" data-q="¿Cómo afecta el cambio climático a Colombia?"><span class="dot dot-climate"></span><span>Cambio climático en Colombia</span></button></li>
+          <li><button class="question-item" data-q="¿Hay reportes sobre incendios forestales?"><span class="dot dot-fire"></span><span>Incendios forestales</span></button></li>
+          <li><button class="question-item" data-q="¿Cómo está la calidad del aire en Colombia?"><span class="dot dot-air"></span><span>Calidad del aire</span></button></li>
+        </ul>
+      </nav>
 
-      <div class="sidebar-mountains" aria-hidden="true">
-        <svg viewBox="0 0 220 90" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="mtn1" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#5FC2B5"/>
-              <stop offset="100%" stop-color="#1E5099"/>
-            </linearGradient>
-            <linearGradient id="mtn2" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#28A89A"/>
-              <stop offset="100%" stop-color="#1B3A6F"/>
-            </linearGradient>
-          </defs>
-          <path d="M0,90 L60,30 L100,55 L140,15 L220,90 Z" fill="url(#mtn1)" opacity="0.85"/>
-          <path d="M0,90 L40,55 L90,70 L160,35 L220,90 Z" fill="url(#mtn2)"/>
-        </svg>
-      </div>
+      <img src="static/mountain1.png" alt="" class="sidebar-mountains" aria-hidden="true">
+
 
       <div class="sidebar-footer">
-        <div class="ideam-badge">
-          <span class="ideam-name">IDEAM</span>
-          <span class="ideam-sub">Instituto de Hidrología,<br>Meteorología y Estudios<br>Ambientales</span>
-        </div>
         <span id="docCountSidebar" class="doc-count">Cargando…</span>
       </div>
     </aside>
@@ -87,7 +78,7 @@
 
         <!-- Welcome screen (hidden once user sends first message) -->
         <div class="welcome" id="welcome">
-          <h2 class="welcome-title">¡Hola! Soy Aura <span class="leaf">🌿</span></h2>
+          <h2 class="welcome-title">¡Hola! Soy Aura <img src="static/ia.png" alt="" class="ia-icon"></h2>
           <p class="welcome-sub">
             Estoy aquí para ayudarte con información climática,<br>
             meteorológica y ambiental de Colombia.
@@ -95,38 +86,43 @@
 
           <div class="quick-grid">
             <button class="quick-card" data-q="¿Quién es la directora del IDEAM?">
-              <div class="quick-icon icon-person">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </div>
+              <div class="quick-icon"><img src="static/icon1.png" alt=""></div>
               <span>¿Quién es la directora del IDEAM?</span>
             </button>
 
             <button class="quick-card" data-q="¿Cuál es la ciudad donde más llueve en Colombia?">
-              <div class="quick-icon icon-rain">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 13a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.7 1.4A4 4 0 0 0 6 14"/><path d="M8 18l1 3M12 18l1 3M16 18l1 3"/></svg>
-              </div>
+              <div class="quick-icon"><img src="static/icon2.png" alt=""></div>
               <span>¿Cuál es la ciudad donde más llueve en Colombia?</span>
             </button>
 
-            <button class="quick-card" data-q="Buscar información sobre alertas">
-              <div class="quick-icon icon-alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
-              </div>
-              <span>Buscar información sobre alertas</span>
-            </button>
-
             <button class="quick-card" data-q="¿Qué sabes del huracán Beryl?">
-              <div class="quick-icon icon-hurricane">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 12a4 4 0 0 0-4-4H3"/><path d="M12 12a4 4 0 0 1 4 4h5"/><path d="M12 12a4 4 0 0 0 4-4V3"/><path d="M12 12a4 4 0 0 1-4 4v5"/></svg>
-              </div>
+              <div class="quick-icon"><img src="static/icon3.png" alt=""></div>
               <span>¿Qué sabes del huracán Beryl?</span>
             </button>
 
-            <button class="quick-card" data-q="¿Sabes las alertas hidrológicas del 4 de julio del 2024?">
-              <div class="quick-icon icon-water">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5C12 2.5 5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg>
-              </div>
-              <span>Alertas hidrológicas del 4 de julio 2024</span>
+            <button class="quick-card" data-q="¿Qué es el material particulado?">
+              <div class="quick-icon"><img src="static/icon4.png" alt=""></div>
+              <span>¿Qué es el material particulado?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Cuánta deforestación hubo en la Amazonía colombiana?">
+              <div class="quick-icon"><img src="static/icon5.png" alt=""></div>
+              <span>¿Cuánta deforestación hubo en la Amazonía?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Cómo afecta el cambio climático a Colombia?">
+              <div class="quick-icon"><img src="static/icon6.png" alt=""></div>
+              <span>¿Cómo afecta el cambio climático a Colombia?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Hay reportes sobre incendios forestales?">
+              <div class="quick-icon"><img src="static/icon7.png" alt=""></div>
+              <span>¿Hay reportes sobre incendios forestales?</span>
+            </button>
+
+            <button class="quick-card" data-q="¿Cómo está la calidad del aire en Colombia?">
+              <div class="quick-icon"><img src="static/icon8.png" alt=""></div>
+              <span>¿Cómo está la calidad del aire?</span>
             </button>
           </div>
         </div>
@@ -134,10 +130,13 @@
         <!-- Messages -->
         <div class="messages" id="messages"></div>
 
-        <!-- Typing -->
+        <!-- Loading: fox meditando + texto, visible mientras Aura busca -->
         <div class="typing-indicator" id="typingIndicator">
           <div class="agent-avatar"><img src="static/aura-chat.png" alt=""></div>
-          <div class="typing-dots"><span></span><span></span><span></span></div>
+          <div class="loading-bubble">
+            <img src="static/meditating-fox.gif" alt="" class="loading-fox">
+            <span class="loading-text">Buscando información…</span>
+          </div>
         </div>
       </div>
 
@@ -155,7 +154,7 @@
   </div>
 
   <div class="error-toast" id="errorToast"></div>
-  <script src="static/chat.js?v=aura4"></script>
+  <script src="static/chat.js?v=aura23"></script>
 </body>
 
 </html>

@@ -45,7 +45,7 @@ html, body {
   height: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-primary);
-  background: linear-gradient(180deg, #EAF4F8 0%, #F4F9FC 40%);
+  background: white;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -87,7 +87,7 @@ button, textarea {
 .btn-new-chat {
   margin: 16px 20px 0;
   padding: 12px 16px;
-  background: var(--aura-blue);
+  background: #0943b5;
   color: var(--text-on-blue);
   border: 0;
   border-radius: var(--radius-xl);
@@ -106,67 +106,98 @@ button, textarea {
 .btn-new-chat:active { transform: scale(.98); }
 .btn-new-chat .plus { font-size: 18px; line-height: 1; }
 
-.sidebar-info {
-  margin: 20px 20px 0;
-  padding: 14px;
-  background: #F1F7FB;
-  border-radius: var(--radius-md);
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+.sidebar-questions {
+  margin: 20px 8px 0;
+  padding: 0 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.sidebar-questions::-webkit-scrollbar { width: 6px; }
+.sidebar-questions::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+.sidebar-section-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  padding: 0 8px;
 }
 
-.sidebar-info p { margin: 0 0 6px; }
-.info-link {
-  color: var(--aura-blue);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 12.5px;
+.question-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.info-link:hover { text-decoration: underline; }
+
+.question-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.35;
+  transition: background .12s ease, color .12s ease;
+}
+.question-item:hover {
+  background: #F1F7FB;
+  color: var(--aura-blue);
+}
+.question-item:active { background: #E8F1FB; }
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.dot-person    { background: #6B5BD2; }
+.dot-rain      { background: #3F8FCC; }
+.dot-alert     { background: #E07A4C; }
+.dot-hurricane { background: #2E7AB8; }
+.dot-water     { background: var(--aura-teal); }
+.dot-tree      { background: #2F8A33; }
+.dot-climate   { background: #D97706; }
+.dot-fire      { background: #C44232; }
+.dot-air       { background: #4A8F9F; }
 
 .sidebar-mountains {
-  margin-top: auto;
   width: 100%;
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
+  height: auto;
+  max-height: 180px;
+  object-fit: contain;
+  object-position: bottom;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
 }
-.sidebar-mountains svg { width: 100%; height: 100%; display: block; }
 
 .sidebar-footer {
-  padding: 14px 20px 18px;
+  padding: 10px 20px 14px;
   border-top: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   background: #FAFCFE;
-}
-
-.ideam-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.ideam-name {
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--aura-navy);
-  letter-spacing: 1px;
-}
-.ideam-sub {
-  font-size: 9.5px;
-  color: var(--text-muted);
-  line-height: 1.3;
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .doc-count {
   font-size: 10.5px;
   color: var(--text-muted);
-  margin-top: 4px;
 }
 
 /* ═════════════════ MAIN ═════════════════ */
@@ -246,7 +277,7 @@ button, textarea {
 
 /* Welcome screen */
 .welcome {
-  max-width: 640px;
+  max-width: 880px;
   margin: 24px auto 0;
   text-align: center;
   display: none;
@@ -262,10 +293,15 @@ button, textarea {
 .welcome-title {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #000000;
   margin: 0 0 12px;
 }
-.welcome-title .leaf { color: var(--aura-green); }
+.welcome-title .ia-icon {
+  height: 1.1em;
+  width: auto;
+  vertical-align: -0.18em;
+  margin-left: 4px;
+}
 .welcome-sub {
   font-size: 14px;
   color: var(--text-secondary);
@@ -275,15 +311,15 @@ button, textarea {
 
 .quick-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 12px;
 }
 
 .quick-card {
-  background: var(--bg-quick);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 16px 12px;
+  background: #ffffff;
+  border: 0px solid #CDDC39;
+  border-radius: 10em;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -294,7 +330,7 @@ button, textarea {
   color: var(--text-primary);
   line-height: 1.35;
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0px 16px 22px #f9f9f9;
 }
 .quick-card:hover {
   transform: translateY(-2px);
@@ -303,17 +339,15 @@ button, textarea {
 }
 
 .quick-icon {
-  width: 44px; height: 44px;
-  border-radius: var(--radius-sm);
+  width: 56px; height: 56px;
   display: flex; align-items: center; justify-content: center;
 }
-.quick-icon svg { width: 22px; height: 22px; }
-.icon-rain      { background: #E3F2FD; color: #3F8FCC; }
-.icon-water     { background: #DEF3F0; color: var(--aura-teal); }
-.icon-alert     { background: #FDECE6; color: #E07A4C; }
-.icon-leaf      { background: #E6F4E7; color: var(--aura-green); }
-.icon-person    { background: #ECEAFB; color: #6B5BD2; }
-.icon-hurricane { background: #E0F0FA; color: #2E7AB8; }
+.quick-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
 
 /* Messages */
 .messages {
@@ -410,7 +444,7 @@ button, textarea {
 }
 .message-bubble strong { color: var(--text-primary); }
 
-/* Typing */
+/* Loading: fox meditando + texto */
 .typing-indicator {
   display: none;
   max-width: 760px;
@@ -419,25 +453,25 @@ button, textarea {
   gap: 10px;
 }
 .typing-indicator.visible { display: flex; }
-.typing-dots {
+.loading-bubble {
   background: var(--bg-agent);
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 12px 16px;
+  padding: 8px 16px 8px 8px;
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
 }
-.typing-dots span {
-  width: 6px; height: 6px;
-  background: var(--aura-teal);
-  border-radius: 50%;
-  animation: bounce 1.2s infinite ease-in-out;
+.loading-fox {
+  width: 56px;
+  height: 56px;
+  display: block;
+  flex-shrink: 0;
 }
-.typing-dots span:nth-child(2) { animation-delay: .2s; }
-.typing-dots span:nth-child(3) { animation-delay: .4s; }
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
-  30%           { transform: translateY(-4px); opacity: 1; }
+.loading-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
 /* ═════════════════ INPUT ═════════════════ */
@@ -479,7 +513,7 @@ button, textarea {
 
 .btn-send {
   width: 40px; height: 40px;
-  background: var(--aura-blue);
+  background: #0943b5;
   color: white;
   border: 0;
   border-radius: 50%;
